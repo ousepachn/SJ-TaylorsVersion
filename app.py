@@ -22,7 +22,7 @@ def read_taylor():
 def face_detection(gray_imgOG):
     face_classifier = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
     face = face_classifier.detectMultiScale(
-    gray_imgOG, scaleFactor=1.1, minNeighbors=5, minSize=(50, 50)
+    gray_imgOG, scaleFactor=1.1, minNeighbors=5, minSize=(25, 25)
     )
     OG_rgb = cv2.cvtColor(imgOG, cv2.COLOR_BGR2RGB)
     return face
@@ -153,7 +153,9 @@ with st.container():
     if 'imgMarked' in session_state and session_state['imgMarked'].size > 0:
         img = Image.fromarray(np.uint8(session_state['imgMarked']))
         scale = int(img.width / scr_w + 0.5)
+        st.write(scale)
         scale = max(2, scale)
+        st.write(scale)
         if 'scale' not in session_state:
             session_state['scale'] = scale
         img = img.resize((img.width // scale, img.height // scale))
