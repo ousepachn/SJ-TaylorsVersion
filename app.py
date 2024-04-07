@@ -147,14 +147,16 @@ if st.button("Process Image"):
         pass
     
 #-------------------
-if session_state['imgMarked'] !=[]:
+if 'imgMarked' in session_state and session_state['imgMarked'].size > 0:
     img = Image.fromarray(np.uint8(session_state['imgMarked']))
     
     img = img.resize((img.width // 2, img.height // 2))
     draw = ImageDraw.Draw(img)
 
     # Draw an ellipse at each coordinate in points
-    for point in st.session_state["points"]:
+    if 'points' not in session_state:
+        session_state['points'] = []
+    for point in session_state["points"]:
         coords = get_ellipse_coords(point)
         draw.ellipse(coords, fill="red")
 
@@ -163,8 +165,8 @@ if session_state['imgMarked'] !=[]:
     if value is not None:
         point = value["x"], value["y"]
 
-        if point not in st.session_state["points"]:
-            st.session_state["points"].append(point)
+        if point not in session_state["points"]:
+            session_state["points"].append(point)
             st.rerun()
 
 
