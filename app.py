@@ -173,20 +173,24 @@ if 'imgMarked' in session_state and session_state['imgMarked'].size > 0:
   
 
 if st.button("View Taylors'Version"):
-    img2=read_taylor()
-    is_in_face = check_points(session_state['face'], session_state['points'])
-    imgOG2=print_faces(is_in_face,imgOG,img2)
-    st.image(imgOG2, channels="BGR")
-    
-    imout=cv2.cvtColor(imgOG2, cv2.COLOR_BGR2RGB)
-    ret, img_enco = cv2.imencode(".png", imout[:, :, [2, 1, 0]])  #numpy.ndarray
-    srt_enco = img_enco.tostring()  #bytes
-    img_BytesIO = io.BytesIO(srt_enco) #_io.BytesIO
-    img_bytes = io.BufferedReader(img_BytesIO) #_io.BufferedReader
+    try:
+        img2=read_taylor()
+        is_in_face = check_points(session_state['face'], session_state['points'])
+        imgOG2=print_faces(is_in_face,imgOG,img2)
+        st.image(imgOG2, channels="BGR")
+        
+        imout=cv2.cvtColor(imgOG2, cv2.COLOR_BGR2RGB)
+        ret, img_enco = cv2.imencode(".png", imout[:, :, [2, 1, 0]])  #numpy.ndarray
+        srt_enco = img_enco.tostring()  #bytes
+        img_BytesIO = io.BytesIO(srt_enco) #_io.BytesIO
+        img_bytes = io.BufferedReader(img_BytesIO) #_io.BufferedReader
 
-    btn = st.download_button(
-            label=":⬇️Download image",
-            data=img_bytes,
-            file_name=f"{session_state['fname'][:10]}_Swifted.png",
-            mime="image/png"
-    )
+        btn = st.download_button(
+                label=":⬇️Download image",
+                data=img_bytes,
+                file_name=f"{session_state['fname'][:10]}_Swifted.png",
+                mime="image/png"
+        )
+    except NameError:
+        st.write("Please upload an image and process it first.")
+        pass
