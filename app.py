@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 import numpy as np
 import io
+from streamlit_js_eval import streamlit_js_eval
 from streamlit_image_coordinates import streamlit_image_coordinates
 
 
@@ -47,14 +48,14 @@ def print_faces(fb,img1,img2):
   #plt.axis('off')
 
 
-def check_points(face, noface):
+def check_points(face, noface,scale):
   is_in_face = []
   try:
     for face_box in face:
         x1, y1, w, h = face_box
         for point in noface:
             x, y = point
-            if x1 <= x*2 <= x1 + w and y1 <= y*2 <= y1 + h:
+            if x1 <= x*scale <= x1 + w and y1 <= y*scale <= y1 + h:
                 is_in_face.append(face_box)
     is_in_face_array = np.array(is_in_face)
     delta = set(map(tuple, is_in_face_array))
@@ -72,7 +73,8 @@ if "points" not in st.session_state:
 
 
 
-
+st.write(f"Screen width is {streamlit_js_eval(js_expressions='parent.innerWidth', key = 'SCR1')}")
+scr_w=streamlit_js_eval(js_expressions='parent.innerWidth', key = 'SCR2')
 def get_ellipse_coords(point: tuple[int, int]) -> tuple[int, int, int, int]:
     center = point
     radius = 10
@@ -93,13 +95,13 @@ st.markdown(
     """
     **Use AI to make their dreams come true. Kindof.** 
     
-    step1: Upload a picture. Also, things get deleted right after you refresh.  \n
+    step1: Upload a picture. \n
     Step2: Click "**Process Image**". Then use your mouse(or finger) to mark the green boxes that you _***DON'T***_ want Taylor'ized. Ex: maybe don't Taylor'ize your partner's face. \n
-    Step3: Click on "**View Taylor's Version**". Voila! There should also be a download button. \n
-    Step4: Refresh and Taylorize more memories. \n
+    Step3: Click on "**View Taylor's Version**".  \n
+    Step4: Refresh and Taylorize more memories. Voila! \n
 
     *Note: If you mess up, just refresh the page, and start over.* \n 
-    *Note: If you're worried about privacy and stuff? Dont be, here is some [(soothing music)](https://www.youtube.com/watch?v=79kpoGF8KWU) to help you destress. Honestly though, the page doesnt store anything beyond your session.* 
+    *Note: worried about privacy and stuff? Here is some [(soothing music)](https://www.youtube.com/watch?v=79kpoGF8KWU) to help you destress. Honestly though, the page doesnt store anything beyond your session.* 
 
     """
 )
@@ -147,27 +149,31 @@ if st.button("Process Image"):
         pass
     
 #-------------------
-if 'imgMarked' in session_state and session_state['imgMarked'].size > 0:
-    img = Image.fromarray(np.uint8(session_state['imgMarked']))
-    
-    img = img.resize((img.width // 2, img.height // 2))
-    draw = ImageDraw.Draw(img)
+with st.container():
+    if 'imgMarked' in session_state and session_state['imgMarked'].size > 0:
+        img = Image.fromarray(np.uint8(session_state['imgMarked']))
+        scale = int(img.width / scr_w + 0.5)
+        scale = max(2, scale)
+        if 'scale' not in session_state:
+            session_state['scale'] = scale
+        img = img.resize((img.width // scale, img.height // scale))
+        draw = ImageDraw.Draw(img)
 
-    # Draw an ellipse at each coordinate in points
-    if 'points' not in session_state:
-        session_state['points'] = []
-    for point in session_state["points"]:
-        coords = get_ellipse_coords(point)
-        draw.ellipse(coords, fill="red")
+        # Draw an ellipse at each coordinate in points
+        if 'points' not in session_state:
+            session_state['points'] = []
+        for point in session_state["points"]:
+            coords = get_ellipse_coords(point)
+            draw.ellipse(coords, fill="red")
 
-    value = streamlit_image_coordinates(img, key="pil")
+        value = streamlit_image_coordinates(img, key="pil")
 
-    if value is not None:
-        point = value["x"], value["y"]
+        if value is not None:
+            point = value["x"], value["y"]
 
-        if point not in session_state["points"]:
-            session_state["points"].append(point)
-            st.rerun()
+            if point not in session_state["points"]:
+                session_state["points"].append(point)
+                st.rerun()
 
 
   
@@ -175,7 +181,7 @@ if 'imgMarked' in session_state and session_state['imgMarked'].size > 0:
 if st.button("View Taylors'Version"):
     try:
         img2=read_taylor()
-        is_in_face = check_points(session_state['face'], session_state['points'])
+        is_in_face = check_points(session_state['face'], session_state['points'],session_state['scale'])
         imgOG2=print_faces(is_in_face,imgOG,img2)
         st.image(imgOG2, channels="BGR")
         
