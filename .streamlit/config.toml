@@ -1,0 +1,8 @@
+[theme]
+base="dark"
+primaryColor="pink"
+font="sans serif"
+textColor="pink"
+[server]
+enableStaticServing = true
+
